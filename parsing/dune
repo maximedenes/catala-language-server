@@ -1,0 +1,8 @@
+(library
+ (name parsing)
+ (flags (:standard -rectypes -linkall))
+ (public_name catala-language-server.parsing)
+ (libraries catala.surface catala.catala_utils)
+ (preprocess
+  (pps ppx_deriving.show))
+)

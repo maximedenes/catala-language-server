@@ -1,0 +1,7 @@
+(library
+ (name catalalsp)
+ (public_name catala-language-server.lsp)
+ (libraries lsp sexplib yojson catala.catala_utils)
+ (flags (:standard -rectypes -linkall))
+ (preprocess
+   (pps ppx_sexp_conv ppx_yojson_conv)))

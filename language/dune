@@ -1,0 +1,6 @@
+(library
+ (name language)
+ (flags (:standard -rectypes -linkall))
+ (public_name catala-language-server.language)
+ (libraries catala.driver catalalsp parsing catala.desugared)
+)

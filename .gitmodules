@@ -1,0 +1,3 @@
+[submodule "catala"]
+	path = catala
+	url = https://github.com/CatalaLang/catala.git

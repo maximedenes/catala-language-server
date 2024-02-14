@@ -1,0 +1,32 @@
+;(menhir
+; (flags "--table" "--explain" "--inspection" "--external-tokens" "Jasmin.Parser")
+; (modules raw_parser))
+
+;(rule
+;  (action (with-stdout-to parserMessages.ml
+;    (run menhir
+;      %{dep:raw_parser.mly}
+;      --compile-errors %{dep:parserMessages.messages}
+;    )
+;  ))
+;)
+
+(executable
+ (name catalalsp)
+ (public_name catalalsp)
+ (flags (:standard -rectypes -linkall))
+ (package catala-language-server)
+ (modules catalalsp)
+ ;(libraries catala.catala sel yojson lsp jsonrpc parsing language controller)
+ (libraries catala.driver catala.surface sel yojson lsp jsonrpc controller parsing language)
+)
+
+(library
+  (name controller)
+  (modules :standard \ catalalsp)
+  (flags (:standard -rectypes -linkall))
+  ;(libraries catala.catala sel yojson lsp parsing language)
+  (libraries catala.driver sel yojson lsp catalalsp parsing language)
+ (preprocess
+   (pps ppx_yojson_conv))
+)
