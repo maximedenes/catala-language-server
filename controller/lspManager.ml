@@ -50,10 +50,11 @@ let do_initialize params =
     tokenModifiers = Language.SemanticTokens.token_modifiers;
   }
   in
+  let full = Some (`Full (SemanticTokensOptions.create_full ~delta:false ())) in
   let semanticTokensOptions = SemanticTokensOptions.{
     legend;
     range = None;
-    full = None;
+    full;
     workDoneProgress = None;
   }
   in
@@ -94,13 +95,12 @@ let do_initialize params =
     ~didCreate ~willCreate ~didRename ~willRename ~didDelete ~willDelete ())
   in
   let textDocumentSync = `TextDocumentSyncKind TextDocumentSyncKind.Full in
-  let completionProvider = CompletionOptions.create () in 
   let hoverProvider = `Bool false in
   let semanticTokensProvider = `SemanticTokensOptions semanticTokensOptions in
   let definitionProvider = `Bool true in
   let workspace = ServerCapabilities.create_workspace ~fileOperations () in
   let capabilities = Lsp.Types.ServerCapabilities.create
-    ~textDocumentSync ~completionProvider ~hoverProvider ~semanticTokensProvider ~definitionProvider ~workspace ()
+    ~textDocumentSync ~hoverProvider ~semanticTokensProvider ~definitionProvider ~workspace ()
   in
   let result = Lsp.Types.InitializeResult.{
     capabilities = capabilities; 
@@ -114,7 +114,9 @@ let do_semanticsTokensFull params =
   let fname = Lsp.Uri.to_path uri in
   let data = match (Workspace.get_syntax_tree !workspace ~fname) with
     | None -> log "semantic tokens requested but no cst"; [||]
-    | Some cst -> Array.of_list @@ Language.SemanticTokens.compute_tokens cst
+    | Some cst ->
+      log "Computing semantic tokens";
+      Array.of_list @@ Language.SemanticTokens.compute_tokens cst
   in
   let result = Lsp.Types.SemanticTokens.create ~data () in
   Ok (Some result), []
@@ -128,6 +130,13 @@ let do_definition params =
 
 let do_shutdown () =
   Ok (), []
+
+let do_syntaxTree params =
+  let LspExt.Request.Client.SyntaxTreeParams.{ textDocument } = params in
+  let fname = Lsp.Uri.to_path textDocument.uri in
+  match Workspace.get_syntax_tree !workspace ~fname with
+  | None -> Error "Cannot find syntax tree", []
+  | Some tree -> Ok (Parsing.Syntax.Concrete.show_tree tree), []
 
 let publish_diagnostics fname diagnostics =
   let uri = Lsp.Uri.of_path fname in
@@ -201,7 +210,7 @@ let textDocumentHover ~id params =
   | _ -> ()
   *)
 
-let dispatch_request : type a. a Lsp.Client_request.t -> (a, string) result * events =
+let dispatch_std_request : type a. a Lsp.Client_request.t -> (a, string) result * events =
   fun req ->
   match req with
   | Initialize params ->
@@ -213,6 +222,13 @@ let dispatch_request : type a. a Lsp.Client_request.t -> (a, string) result * ev
   | Shutdown ->
     do_shutdown ()
   | _ -> Error "Received unknown request", []
+
+let dispatch_request : type a. a LspExt.Request.Client.t -> (a, string) result * events =
+  fun req ->
+  match req with
+  | Std r -> dispatch_std_request r
+  | SyntaxTree params ->
+    do_syntaxTree params
 
 let dispatch_notification =
   let open Lsp.Client_notification in function
@@ -232,16 +248,16 @@ let handle_lsp_event = function
     match rpc with
     | Request req ->
         log @@ "ui request: " ^ req.method_;
-        begin match Lsp.Client_request.of_jsonrpc req with
+        begin match LspExt.Request.Client.of_jsonrpc req with
           | Error message ->
             log @@ "Error decoding request: " ^ message; []
-          | Ok(E r) ->
+          | Ok(Pack r) ->
             let resp, events = dispatch_request r in
             begin match resp with
             | Error message ->
               output_json @@ Jsonrpc.Response.(yojson_of_t @@ error req.id (Error.make ~code:RequestFailed ~message ()))
             | Ok resp ->
-              let resp = Lsp.Client_request.yojson_of_result r resp in
+              let resp = LspExt.Request.Client.yojson_of_result r resp in
               output_json Jsonrpc.Response.(yojson_of_t @@ ok req.id resp)
             end;
             events

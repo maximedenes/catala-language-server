@@ -10,7 +10,7 @@ let push_token tokens ~deltaLine ~deltaStart ~length ~tokenType ~tokenModifiers 
 let delta_loc lastLine lastStart pos =
   let open Catala_utils in
   let newLine = Pos.get_start_line pos in
-  let newStart = Pos.get_start_column pos in
+  let newStart = Pos.get_start_column pos - 1 in
   let newLine = newLine - 1 in
   let deltaLine = newLine - lastLine in
   let deltaStart = if deltaLine > 0 then newStart else newStart - lastStart in
@@ -31,7 +31,9 @@ let compute_token (lastLine,lastStart,tokens) node =
   let open Parsing.Syntax.Concrete in
   let pos = Mark.get node.green in
   let green = Mark.remove node.green in
-  assert (Pos.get_start_line pos = Pos.get_end_line pos);
+  if not (Pos.get_start_line pos = Pos.get_end_line pos) then begin
+     Printf.eprintf "unsupported multi line token\n"; lastLine, lastStart, tokens
+  end else
   let length = Pos.get_end_column pos - Pos.get_start_column pos in
   let parent_green = Option.bind node.top (fun x -> Some (Mark.remove x.green)) in
   let (deltaLine, deltaStart, newLine, newStart) = delta_loc lastLine lastStart pos in

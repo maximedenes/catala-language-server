@@ -31,8 +31,6 @@ module Concrete :
 
     val mk_root : green -> node
 
-    (*
     val show_tree : node -> string
-    *)
 
   end
