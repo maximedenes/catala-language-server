@@ -10,6 +10,6 @@ type typing_result = {
   revdeps : string PathMap.t;
 }
 
-val type_program : Surface.Ast.program -> typing_result
+val type_program : fname:string -> Surface.Ast.program -> typing_result
 
 val find_definition : fname:string -> Desugared.Name_resolution.context -> References.reference_map -> Lsp.Types.Position.t -> Location.t option

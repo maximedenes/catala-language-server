@@ -8,11 +8,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1707987394,
-        "narHash": "sha256-M5dbst69xdxY4II1hsVBJw4StMW8KyR80wZFiw/VeWY=",
+        "lastModified": 1708967666,
+        "narHash": "sha256-Or1HJziuigT5B20ikmmvfjrgTub4dp4VIjLjUPrPWQA=",
         "owner": "maximedenes",
         "repo": "catala",
-        "rev": "263bbb1da21b203d5b03d5c21fffdf4503b71f60",
+        "rev": "54ea929a0b6366a236c7b40c571dbbafc902ac6c",
         "type": "github"
       },
       "original": {

@@ -47,7 +47,7 @@ let analyze_file fname workspace =
   in
   try
     let cst, ast = Parsing.Parser_driver.parse_program input_src in
-    let Typing.{ diagnostics; references; nameres_context; revdeps } = Typing.type_program ast in
+    let Typing.{ diagnostics; references; nameres_context; revdeps } = Typing.type_program ~fname ast in
     let diagnostics = PathMap.union (fun _ v _ -> Some v) diagnostics workspace.diagnostics in
     let root_doc = { nameres_context } in
     let root_documents = PathMap.add fname root_doc workspace.root_documents in
